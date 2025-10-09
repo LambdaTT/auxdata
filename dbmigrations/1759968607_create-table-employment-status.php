@@ -25,7 +25,7 @@ class CreateTableEmploymentStatus extends Migration
 
   private function isEntityAllowed($entityName)
   {
-    $allowedEntities = json_decode(file_get_contents(dirname(__DIR__) . '/config.json'));
+    $allowedEntities = json_decode(file_get_contents(dirname(__DIR__) . '/config.json'), true);
     if (empty($allowedEntities) || isset($allowedEntities['entities'])) return false;
     $allowedEntities = $allowedEntities['entities'];
     if (!is_array($allowedEntities)) return false;
