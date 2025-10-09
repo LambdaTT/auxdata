@@ -1,0 +1,8 @@
+{
+    "entities": [
+        "maritalstatus",
+        "kinship",
+        "employmentstatus",
+        "educationlevel"
+    ]
+}
