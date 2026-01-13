@@ -16,8 +16,8 @@ class CreateTableMaritalStatus extends Migration
       ->string('ds_key', 17)
       ->datetime('dt_created')->setDefaultValue(DbVocab::SQL_CURTIMESTAMP())
       ->datetime('dt_updated')->nullable()->setDefaultValue(null)
-      ->int('id_iam_user_created')->nullable()->setDefaultValue(null)
-      ->int('id_iam_user_updated')->nullable()->setDefaultValue(null)
+      ->fk('id_iam_user_created')->nullable()->setDefaultValue(null)
+      ->fk('id_iam_user_updated')->nullable()->setDefaultValue(null)
       ->string('ds_title', 100)
       ->text('tx_description')->nullable()->setDefaultValue(null)
       ->Index('KEY', DbVocab::IDX_UNIQUE)->onColumn('ds_key');
