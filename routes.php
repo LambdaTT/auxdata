@@ -5,6 +5,7 @@ namespace Auxdata;
 use SplitPHP\Request;
 use SplitPHP\WebService;
 use SplitPHP\Exceptions\Unauthorized;
+use SplitPHP\ModsManager;
 
 class Routes extends WebService
 {
@@ -12,9 +13,10 @@ class Routes extends WebService
   {
     $this->addEndpoint('GET', '/v1/?entity?/?key?', function (Request $req) {
       $params = $req->getRoute()->params;
-      $tableName = strtoupper("AUX_{$params['entity']}");
+      $entity = strtolower($params['entity']);
       $this->auth([
-        $tableName => 'R'
+        "auxdata.{$entity}.read",
+        "auxdata.{$entity}.manage"
       ]);
 
       $result = $this->getService("auxdata/{$params['entity']}")->get(['ds_key' => $params['key']]);
@@ -28,9 +30,10 @@ class Routes extends WebService
 
     $this->addEndpoint('GET', '/v1/?entity?', function (Request $req) {
       $entity = $req->getRoute()->params['entity'];
-      $tableName = strtoupper("AUX_{$entity}");
+      $entitySlug = strtolower($entity);
       $this->auth([
-        $tableName => 'R'
+        "auxdata.{$entitySlug}.read",
+        "auxdata.{$entitySlug}.manage"
       ]);
 
       $params = $req->getBody();
@@ -43,10 +46,7 @@ class Routes extends WebService
 
     $this->addEndpoint('POST', '/v1/?entity?', function (Request $req) {
       $entity = $req->getRoute()->params['entity'];
-      $tableName = strtoupper("AUX_{$entity}");
-      $this->auth([
-        $tableName => 'C'
-      ]);
+      $this->auth("auxdata." . strtolower($entity) . ".manage");
 
       $data = $req->getBody();
       $result = $this->getService("auxdata/{$entity}")->create($data);
@@ -58,10 +58,7 @@ class Routes extends WebService
 
     $this->addEndpoint('PUT', '/v1/?entity?/?key?', function (Request $req) {
       $params = $req->getRoute()->params;
-      $tableName = strtoupper("AUX_{$params['entity']}");
-      $this->auth([
-        $tableName => 'U'
-      ]);
+      $this->auth("auxdata." . strtolower($params['entity']) . ".manage");
 
       $filters = [
         'ds_key' => $params['key']
@@ -76,10 +73,7 @@ class Routes extends WebService
 
     $this->addEndpoint('DELETE', '/v1/?entity?/?key?', function (Request $req) {
       $params = $req->getRoute()->params;
-      $tableName = strtoupper("AUX_{$params['entity']}");
-      $this->auth([
-        $tableName => 'D'
-      ]);
+      $this->auth("auxdata." . strtolower($params['entity']) . ".manage");
 
       $filters = [
         'ds_key' => $params['key']
@@ -92,18 +86,15 @@ class Routes extends WebService
     });
   }
 
-  private function auth(array $permissions)
+  private function auth(array|string $permissions)
   {
-    if (!$this->getService('modcontrol/control')->moduleExists('iam')) return;
+    if (!ModsManager::modExists('iam')) return;
 
     // Auth user login:
     if (!$this->getService('iam/session')->authenticate())
       throw new Unauthorized("Não autorizado.");
 
     // Validate user permissions:
-    // TODO(iam-refactor): entity/CRUD validatePermissions() was removed in the IAM
-    // permissions simplification. Re-enable via tag-based requireAny() once tags exist.
-    // $this->getService('iam/permission')
-    //   ->validatePermissions($permissions);
+    $this->getService('iam/permission')->requireAny($permissions);
   }
 }
